@@ -1,0 +1,33 @@
+sistema_contable_flet/
+├── main.py                 # Punto de entrada de la aplicación Flet
+├── requirements.txt        # Dependencias del proyecto
+│
+├── data/                   # Carpeta para almacenar las bases de datos
+│   └── (Aquí se crearán usuarios.db y contabilidad.db)
+│
+├── database/
+│   ├── __init__.py
+│   └── db_manager.py       # Lógica para interactuar con las bases de datos
+│
+├── logic/
+│   ├── __init__.py
+│   └── auth.py             # Lógica de autenticación (hashing passwords)
+│   └── contabilidad_logic.py # Lógica contable (validaciones básicas)
+│
+├── views/
+│   ├── __init__.py
+│   ├── login_view.py
+│   ├── register_view.py
+│   ├── config_regimen_view.py
+│   ├── dashboard_view.py
+│   ├── puc_view.py           # Vista del Catálogo de Cuentas
+│   ├── registro_contable_view.py # Vista para registrar comprobantes/movimientos
+│   └── financiero_view.py    # Placeholder para Estados Financieros
+│   └── impuestos_view.py     # Placeholder para IVA/Retenciones
+│   └── reportes_view.py      # Placeholder para Reportes
+│   └── auditoria_view.py     # Placeholder para Auditoría
+│
+└── utils/
+    ├── __init__.py
+    └── helpers.py          # Funciones de utilidad (si son necesarias)
+    └── constants.py        # Constantes (ej: nombres de régimen)
