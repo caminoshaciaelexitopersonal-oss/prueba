@@ -1,0 +1,6 @@
+flet
+langchain
+langgraph
+langchain-openai
+python-dotenv
+fpdf2
