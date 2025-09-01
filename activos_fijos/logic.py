@@ -7,19 +7,37 @@ import datetime
 from typing import List, Dict, Any, Optional
 from database import db_manager
 from contabilidad import contabilidad_logic
+from langchain_core.tools import tool
 
 logger = logging.getLogger(__name__)
 
+@tool
 def registrar_activo(
     nombre: str, descripcion: str, fecha_adquisicion: str, costo_adquisicion: float,
     valor_residual: float, vida_util_meses: int, metodo_depreciacion: str,
     cuenta_activo: str, cuenta_dep_acum: str, cuenta_gasto_dep: str,
-    usuario_id: int, cuenta_contrapartida: str # Ej: 1110 (Bancos) o 2205 (Proveedores)
-) -> bool:
+    cuenta_contrapartida: str, usuario_id: int = 1
+) -> str:
     """
-    Registra un nuevo activo fijo y su asiento contable de adquisición.
+    Registra un nuevo activo fijo y su asiento contable de adquisición inicial.
+
+    Args:
+        nombre (str): Nombre descriptivo del activo (ej: 'Laptop Dell XPS 15').
+        descripcion (str): Descripción más detallada del activo.
+        fecha_adquisicion (str): Fecha de compra en formato 'AAAA-MM-DD'.
+        costo_adquisicion (float): El costo total de compra del activo.
+        valor_residual (float): El valor estimado del activo al final de su vida útil.
+        vida_util_meses (int): La vida útil del activo en meses.
+        metodo_depreciacion (str): Método de depreciación a usar. Actualmente soportado: 'linea_recta'.
+        cuenta_activo (str): El código de la cuenta contable del activo (ej: '1528').
+        cuenta_dep_acum (str): El código de la cuenta de depreciación acumulada (ej: '1592').
+        cuenta_gasto_dep (str): El código de la cuenta para el gasto de depreciación (ej: '5160').
+        cuenta_contrapartida (str): El código de la cuenta con la que se pagó o se generó la deuda (ej: '1110' para bancos, '2205' para proveedores).
+        usuario_id (int): ID del usuario que registra. Por defecto es 1.
+
+    Returns:
+        str: Un mensaje de éxito o error.
     """
-    # 1. Guardar el activo en la base de datos
     success, activo_id = db_manager.crear_activo_fijo_db(
         nombre=nombre, descripcion=descripcion, fecha_adquisicion=fecha_adquisicion,
         costo_adquisicion=costo_adquisicion, valor_residual=valor_residual,
@@ -28,26 +46,26 @@ def registrar_activo(
         cuenta_gasto_depreciacion=cuenta_gasto_dep
     )
     if not success:
-        return False
+        return "Error: No se pudo crear el registro del activo fijo en la base de datos."
 
-    # 2. Generar el asiento contable de la adquisición
     descripcion_asiento = f"Compra de activo fijo: {nombre}"
     movimientos = [
         {"cuenta_codigo": cuenta_activo, "descripcion_detalle": descripcion_asiento, "debito": costo_adquisicion, "credito": 0},
         {"cuenta_codigo": cuenta_contrapartida, "descripcion_detalle": f"Pago/deuda por {nombre}", "debito": 0, "credito": costo_adquisicion},
     ]
 
-    success_contable, _ = contabilidad_logic.registrar_nuevo_comprobante(
+    # La función de lógica contable ya es una herramienta y devuelve un string
+    resultado_contable = contabilidad_logic.registrar_nuevo_comprobante(
         fecha=fecha_adquisicion, tipo="Adquisición Activo",
         descripcion=descripcion_asiento, movimientos=movimientos, usuario_id=usuario_id
     )
 
-    if not success_contable:
-        # En un sistema real, se debería manejar este error (ej: borrar el activo creado)
-        logger.error(f"Se creó el activo ID {activo_id} pero falló su contabilización.")
-        return False
+    if "Error" in resultado_contable:
+        logger.error(f"Se creó el activo ID {activo_id} pero falló su contabilización: {resultado_contable}")
+        # En un sistema real, se debería implementar una lógica de rollback aquí.
+        return f"Error: Se creó el activo pero falló la contabilización: {resultado_contable}"
 
-    return True
+    return f"Éxito: Activo '{nombre}' (ID: {activo_id}) y su asiento de adquisición han sido registrados. {resultado_contable}"
 
 def _calcular_depreciacion_un_mes(activo: Dict[str, Any]) -> float:
     """
@@ -62,10 +80,18 @@ def _calcular_depreciacion_un_mes(activo: Dict[str, Any]) -> float:
             return (costo - residual) / vida_util
     return 0.0
 
-def ejecutar_proceso_depreciacion_mensual(ano: int, mes: int, usuario_id: int) -> bool:
+@tool
+def ejecutar_proceso_depreciacion_mensual(ano: int, mes: int, usuario_id: int = 1) -> str:
     """
-    Ejecuta el proceso de depreciación para todos los activos para un mes y año dados.
-    Genera un único comprobante contable con el resumen de la depreciación del mes.
+    Ejecuta el proceso de depreciación para todos los activos para un mes y año dados y genera el comprobante contable correspondiente.
+
+    Args:
+        ano (int): El año para el cual ejecutar la depreciación (ej: 2023).
+        mes (int): El mes para el cual ejecutar la depreciación (1-12).
+        usuario_id (int): ID del usuario que ejecuta el proceso. Por defecto es 1.
+
+    Returns:
+        str: Un resumen del resultado del proceso.
     """
     activos = db_manager.obtener_activos_fijos_db(estado="Activo")
     if not activos:

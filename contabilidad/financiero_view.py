@@ -30,7 +30,7 @@ def FinancieroView(page: ft.Page):
         "/financiero",
         appbar=ft.AppBar(
             title=ft.Text("Estados Financieros"),
-            bgcolor=ft.colors.SURFACE_VARIANT,
+            bgcolor=ft.Colors.SURFACE_VARIANT,
              leading=ft.IconButton(ft.icons.ARROW_BACK, on_click=lambda _: page.go("/dashboard"), tooltip="Volver al Dashboard")
         ),
         controls=[

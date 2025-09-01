@@ -4,9 +4,11 @@ Módulo para la lógica de negocio del Análisis Financiero.
 Contiene las funciones para calcular los diferentes ratios.
 """
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from contabilidad import reportes_logic
 import datetime
+from langchain_core.tools import tool
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -96,29 +98,34 @@ def calcular_ratios_mercado(datos: Dict[str, Any]) -> Dict[str, Any]:
         "rentabilidad_por_dividendo": _safe_div(dividendo_anual_accion, precio_accion) * 100 if precio_accion > 0 else 0.0
     }
 
-def generar_analisis_financiero_completo(fecha: str) -> Dict[str, Any]:
+@tool
+def generar_analisis_financiero_completo(fecha: str) -> str:
     """
     Orquesta la generación de todos los ratios financieros para una fecha específica.
+
+    Args:
+        fecha (str): La fecha de corte para el análisis, en formato 'AAAA-MM-DD'.
+
+    Returns:
+        str: Un string en formato JSON con todos los ratios calculados, agrupados por categoría.
     """
     logger.info(f"Iniciando análisis financiero completo para la fecha {fecha}")
 
-    # 1. Obtener los reportes base
     balance = reportes_logic.generar_balance_general(fecha)
+    if not balance.get('total_activos'):
+        return "Error: No se pudieron generar los datos del Balance General para la fecha dada. No hay datos para analizar."
 
-    # Para el estado de resultados, asumimos que es para el año hasta la fecha
     ano = datetime.datetime.strptime(fecha, '%Y-%m-%d').year
     fecha_inicio_ano = f"{ano}-01-01"
     estado_resultados = reportes_logic.generar_estado_resultados(fecha_inicio_ano, fecha)
 
-    # 2. Consolidar los datos necesarios en un solo diccionario
-    # Esto es una simplificación. Un sistema real tendría que sumarizar las cuentas correctamente.
     datos_consolidados = {
-        "activo_corriente": balance.get('total_activos_corrientes', 0.0), # Asumiendo que el reporte lo tiene
-        "pasivo_corriente": balance.get('total_pasivos_corrientes', 0.0), # Asumiendo que el reporte lo tiene
+        "activo_corriente": balance.get('total_activos_corrientes', 0.0),
+        "pasivo_corriente": balance.get('total_pasivos_corrientes', 0.0),
         "inventario": next((a['saldo_final'] for a in balance.get('activos', []) if a['codigo'].startswith('14')), 0.0),
         "caja_y_bancos": next((a['saldo_final'] for a in balance.get('activos', []) if a['codigo'].startswith('11')), 0.0),
         "cuentas_por_cobrar": next((a['saldo_final'] for a in balance.get('activos', []) if a['codigo'].startswith('13')), 0.0),
-        "ventas_a_credito": estado_resultados.get('total_ingresos', 0.0), # Simplificación: asumimos que todas las ventas son a crédito
+        "ventas_a_credito": estado_resultados.get('total_ingresos', 0.0),
         "costo_de_venta": estado_resultados.get('total_costos', 0.0),
         "ventas_totales": estado_resultados.get('total_ingresos', 0.0),
         "activo_total": balance.get('total_activos', 0.0),
@@ -126,16 +133,13 @@ def generar_analisis_financiero_completo(fecha: str) -> Dict[str, Any]:
         "patrimonio_neto": balance.get('total_patrimonio', 0.0),
         "utilidad_bruta": estado_resultados.get('utilidad_bruta', 0.0),
         "utilidad_operacional": estado_resultados.get('utilidad_operacional', 0.0),
-        "utilidad_neta": estado_resultados.get('utilidad_antes_impuestos', 0.0), # Simplificación
-        # Datos para ratios de mercado (placeholders)
-        "acciones_en_circulacion": 1000000,
-        "precio_por_accion": 5.50,
+        "utilidad_neta": estado_resultados.get('utilidad_antes_impuestos', 0.0),
+        "acciones_en_circulacion": 1000000, "precio_por_accion": 5.50,
     }
     datos_consolidados['valor_contable_por_accion'] = _safe_div(datos_consolidados['patrimonio_neto'], datos_consolidados['acciones_en_circulacion'])
     datos_consolidados['capitalizacion_de_mercado'] = datos_consolidados['precio_por_accion'] * datos_consolidados['acciones_en_circulacion']
-    datos_consolidados['ventas_anuales'] = datos_consolidados['ventas_totales'] # Simplificación
+    datos_consolidados['ventas_anuales'] = datos_consolidados['ventas_totales']
 
-    # 3. Calcular todas las categorías de ratios
     analisis_final = {
         "Ratios de Liquidez": calcular_ratios_liquidez(datos_consolidados),
         "Ratios de Gestión": calcular_ratios_gestion(datos_consolidados),
@@ -145,11 +149,20 @@ def generar_analisis_financiero_completo(fecha: str) -> Dict[str, Any]:
     }
 
     logger.info("Análisis financiero completado.")
-    return analisis_final
+    return json.dumps(analisis_final, indent=2, ensure_ascii=False)
 
-def generar_historial_de_ratio(nombre_ratio: str, categoria_ratio: str, num_meses: int = 6) -> Dict[str, list]:
+@tool
+def generar_historial_de_ratio(nombre_ratio: str, categoria_ratio: str, num_meses: int = 6) -> str:
     """
-    Calcula el valor de un ratio específico para los últimos N meses.
+    Calcula el valor de un ratio financiero específico para los últimos N meses para ver su tendencia.
+
+    Args:
+        nombre_ratio (str): El nombre exacto del ratio a consultar (ej: 'prueba_acida').
+        categoria_ratio (str): La categoría a la que pertenece el ratio (ej: 'Ratios de Liquidez').
+        num_meses (int): El número de meses hacia atrás para generar el historial. Por defecto 6.
+
+    Returns:
+        str: Un string en formato JSON con las etiquetas (meses) y los valores del ratio.
     """
     logger.info(f"Generando historial para el ratio '{nombre_ratio}' en los últimos {num_meses} meses.")
 

@@ -14,7 +14,7 @@ class FacturacionView(ft.View):
         self.page = page
         self.appbar = ft.AppBar(
             title=ft.Text("Módulo de Facturación"),
-            bgcolor=ft.colors.SURFACE_VARIANT,
+            bgcolor=ft.Colors.SURFACE_VARIANT,
             leading=ft.IconButton(ft.icons.ARROW_BACK, on_click=lambda _: page.go("/dashboard"))
         )
 
@@ -47,7 +47,7 @@ class FacturacionView(ft.View):
             ft.Container(
                 content=self.tabla_facturas,
                 expand=True,
-                border=ft.border.all(1, ft.colors.OUTLINE),
+                border=ft.border.all(1, ft.Colors.OUTLINE),
                 border_radius=ft.border_radius.all(5)
             )
         ]
@@ -92,7 +92,7 @@ class FacturaFormView(ft.View):
         self.page = page
         self.appbar = ft.AppBar(
             title=ft.Text("Crear Nueva Factura"),
-            bgcolor=ft.colors.SURFACE_VARIANT,
+            bgcolor=ft.Colors.SURFACE_VARIANT,
             leading=ft.IconButton(ft.icons.ARROW_BACK, on_click=lambda _: page.go("/facturacion"))
         )
 
@@ -144,7 +144,7 @@ class FacturaFormView(ft.View):
                 cant_field,
                 precio_field,
                 subtotal_text,
-                ft.IconButton(icon=ft.icons.REMOVE_CIRCLE_OUTLINE, icon_color=ft.colors.RED, data=None, on_click=self.eliminar_item_fila)
+                ft.IconButton(icon=ft.icons.REMOVE_CIRCLE_OUTLINE, icon_color=ft.Colors.RED, data=None, on_click=self.eliminar_item_fila)
             ],
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN
         )

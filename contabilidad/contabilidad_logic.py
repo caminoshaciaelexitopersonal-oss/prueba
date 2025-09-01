@@ -1,5 +1,8 @@
 # logic/contabilidad_logic.py
 import logging
+from langchain_core.tools import tool
+from typing import List, Dict, Any, Optional, Tuple
+from database import db_manager
 
 logger = logging.getLogger(__name__)
 
@@ -68,21 +71,34 @@ def calcular_retencion_fuente(base: float, concepto: str, es_autoretenedor: bool
     logger.info(f"Cálculo de Retefuente para '{concepto}': base={base}, tarifa={regla['tarifa']*100}%, resultado={retencion}")
     return retencion
 
-from typing import List, Dict, Any, Optional, Tuple
-from database import db_manager
-
-def registrar_nuevo_comprobante(fecha: str, tipo: str, descripcion: str, movimientos: List[Dict[str, Any]], usuario_id: int) -> Tuple[bool, Optional[int]]:
+@tool
+def registrar_nuevo_comprobante(
+    fecha: str,
+    tipo: str,
+    descripcion: str,
+    movimientos: List[Dict[str, Any]],
+    usuario_id: int = 1 # Default user_id to 1 for agent operations
+) -> str:
     """
-    Realiza las validaciones de negocio y registra un nuevo comprobante.
-    Devuelve (True, comprobante_id) si es exitoso, (False, None) en caso contrario.
+    Registra un nuevo comprobante contable con sus movimientos. Es la herramienta principal para crear cualquier transacción contable.
+
+    Args:
+        fecha (str): La fecha del comprobante en formato 'AAAA-MM-DD'.
+        tipo (str): El tipo de comprobante. Ejemplos: 'Comprobante Diario', 'Factura Venta', 'Recibo de Caja (Ingreso)'.
+        descripcion (str): Una descripción general del propósito del comprobante.
+        movimientos (List[Dict[str, Any]]): Una lista de los movimientos contables. Cada movimiento es un diccionario con las claves 'cuenta_codigo', 'debito', 'credito', y opcionalmente 'descripcion_detalle'. La suma de débitos debe ser igual a la suma de créditos.
+        usuario_id (int): El ID del usuario que realiza la operación. Por defecto es 1.
+
+    Returns:
+        str: Un mensaje indicando si la operación fue exitosa y el ID del comprobante, o un mensaje de error.
     """
     # 1. Validar partida doble
     if not validar_partida_doble(movimientos):
-        logger.error("Error de validación: La partida doble no cuadra.")
-        return False, None
+        error_msg = "Error de validación: La partida doble no cuadra. La suma de los débitos debe ser igual a la suma de los créditos."
+        logger.error(error_msg)
+        return error_msg
 
-    # 2. Aquí podrían ir otras validaciones de negocio (ej: cuentas que no existen, etc.)
-    # La validación de existencia de cuenta ya se hace en la transacción de db_manager, lo cual es bueno.
+    # 2. Aquí podrían ir otras validaciones de negocio.
 
     # 3. Llamar al gestor de base de datos para guardar
     return db_manager.agregar_comprobante_y_movimientos(
