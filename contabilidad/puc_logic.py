@@ -4,19 +4,58 @@ Módulo para la lógica de negocio relacionada con el Plan de Cuentas (PUC).
 """
 from typing import List, Dict, Any, Optional
 from database import db_manager
+from langchain_core.tools import tool
 
-def obtener_cuentas(filtro: Optional[str] = None) -> List[Dict[str, Any]]:
+@tool
+def obtener_cuentas(filtro: Optional[str] = None) -> str:
     """
-    Obtiene todas las cuentas del PUC, opcionalmente filtradas.
-    Llama a la función correspondiente del gestor de base de datos.
-    """
-    return db_manager.obtener_cuentas_puc(filtro=filtro)
+    Busca y obtiene cuentas del Plan Único de Cuentas (PUC).
 
-def obtener_cuenta_por_codigo(codigo: str) -> Optional[Dict[str, Any]]:
+    Esta herramienta es esencial para encontrar los códigos de cuenta correctos antes de registrar un comprobante.
+    Puedes usarla para encontrar una cuenta por su nombre o código.
+
+    Args:
+        filtro (Optional[str]): Un término de búsqueda para filtrar las cuentas. Puede ser parte del código (ej: '1105') o del nombre (ej: 'caja'). Si se omite, devuelve las primeras cuentas del plan.
+
+    Returns:
+        str: Una cadena formateada con la lista de cuentas encontradas, incluyendo su código, nombre y naturaleza (Débito/Crédito). Si no se encuentran, devuelve un mensaje indicándolo.
     """
-    Obtiene los datos de una cuenta específica por su código.
+    cuentas = db_manager.obtener_cuentas_puc(filtro=filtro, limit=20) # Limitar para no abrumar
+    if not cuentas:
+        return "No se encontraron cuentas con ese filtro."
+
+    # Formatear la salida para que sea fácil de leer para el LLM y el usuario
+    headers = ["Código", "Nombre", "Naturaleza"]
+    data = [[c['codigo'], c['nombre'], c['naturaleza']] for c in cuentas]
+
+    # Calcular anchos de columna
+    widths = [max(len(str(item)) for item in col) for col in zip(headers, *data)]
+
+    header_line = " | ".join(f"{h:<{w}}" for h, w in zip(headers, widths))
+    separator = "-+-".join("-" * w for w in widths)
+    data_lines = "\n".join(" | ".join(f"{str(item):<{w}}" for item, w in zip(row, widths)) for row in data)
+
+    return f"{header_line}\n{separator}\n{data_lines}"
+
+
+@tool
+def obtener_cuenta_por_codigo(codigo: str) -> str:
     """
-    return db_manager.obtener_cuenta_puc_por_codigo(codigo)
+    Obtiene los datos de una cuenta específica por su código exacto.
+
+    Útil para verificar si un código de cuenta existe antes de usarlo en una transacción.
+
+    Args:
+        codigo (str): El código exacto de la cuenta a buscar (ej: '110505').
+
+    Returns:
+        str: Los detalles de la cuenta si se encuentra, o un mensaje indicando que no existe.
+    """
+    cuenta = db_manager.obtener_cuenta_puc_por_codigo(codigo)
+    if cuenta:
+        return f"Cuenta encontrada: Código: {cuenta['codigo']}, Nombre: {cuenta['nombre']}, Naturaleza: {cuenta['naturaleza']}"
+    else:
+        return f"Error: No se encontró ninguna cuenta con el código exacto '{codigo}'."
 
 def agregar_cuenta(codigo: str, nombre: str, naturaleza: str, clase: str, grupo_niif: Optional[str] = None) -> bool:
     """

@@ -14,7 +14,7 @@ class ComprasView(ft.View):
         self.page = page
         self.appbar = ft.AppBar(
             title=ft.Text("Módulo de Compras"),
-            bgcolor=ft.colors.SURFACE_VARIANT,
+            bgcolor=ft.Colors.SURFACE_VARIANT,
             leading=ft.IconButton(ft.icons.ARROW_BACK, on_click=lambda _: page.go("/dashboard"))
         )
 
@@ -43,7 +43,7 @@ class ComprasView(ft.View):
                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN
             ),
             ft.Divider(height=10),
-            ft.Container(content=self.tabla_compras, expand=True, border=ft.border.all(1, ft.colors.OUTLINE), border_radius=ft.border_radius.all(5))
+            ft.Container(content=self.tabla_compras, expand=True, border=ft.border.all(1, ft.Colors.OUTLINE), border_radius=ft.border_radius.all(5))
         ]
 
         self.cargar_compras()
@@ -75,7 +75,7 @@ class CompraFormView(ft.View):
         self.page = page
         self.appbar = ft.AppBar(
             title=ft.Text("Registrar Nueva Compra"),
-            bgcolor=ft.colors.SURFACE_VARIANT,
+            bgcolor=ft.Colors.SURFACE_VARIANT,
             leading=ft.IconButton(ft.icons.ARROW_BACK, on_click=lambda _: page.go("/compras"))
         )
 
@@ -119,7 +119,7 @@ class CompraFormView(ft.View):
             ft.TextField(label="Cantidad", value="1", width=100, on_change=self.actualizar_total),
             ft.TextField(label="Precio Unitario", value="0", prefix_text="$", width=150, on_change=self.actualizar_total),
             ft.Text("Subtotal: $ 0.00", width=150),
-            ft.IconButton(icon=ft.icons.REMOVE_CIRCLE_OUTLINE, icon_color=ft.colors.RED, data=None, on_click=self.eliminar_item_fila)
+            ft.IconButton(icon=ft.icons.REMOVE_CIRCLE_OUTLINE, icon_color=ft.Colors.RED, data=None, on_click=self.eliminar_item_fila)
         ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
         new_row.controls[-1].data = new_row
         self.items_container.controls.append(new_row)

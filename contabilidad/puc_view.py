@@ -39,7 +39,7 @@ class PUCViewContent(ft.UserControl):
              options=[ft.dropdown.Option(key=cla) for cla in CLASE_CUENTA_OPCIONES],
         )
         self.dlg_grupo_niif = ft.TextField(label="Grupo NIIF (Opcional)")
-        self.dlg_error = ft.Text("", color=ft.colors.RED, visible=False)
+        self.dlg_error = ft.Text("", color=ft.Colors.RED, visible=False)
         self.editing_codigo = None # Guarda el código si estamos editando
 
     def build(self):
@@ -84,7 +84,7 @@ class PUCViewContent(ft.UserControl):
                  ft.Container(
                     content=self.tabla_cuentas,
                     expand=True, # Ocupa el espacio disponible
-                    border=ft.border.all(1, ft.colors.OUTLINE), # Borde opcional
+                    border=ft.border.all(1, ft.Colors.OUTLINE), # Borde opcional
                     border_radius=ft.border_radius.all(5)
                  )
                 # ft.ListView([self.tabla_cuentas], expand=True, spacing=10)
@@ -113,7 +113,7 @@ class PUCViewContent(ft.UserControl):
                         ft.DataCell(
                             ft.Row([
                                 ft.IconButton(ft.icons.EDIT, tooltip="Editar", data=cuenta['codigo'], on_click=self.abrir_dialogo_editar),
-                                ft.IconButton(ft.icons.DELETE, tooltip="Eliminar", data=cuenta['codigo'], on_click=self.confirmar_eliminar, icon_color=ft.colors.RED),
+                                ft.IconButton(ft.icons.DELETE, tooltip="Eliminar", data=cuenta['codigo'], on_click=self.confirmar_eliminar, icon_color=ft.Colors.RED),
                             ])
                         ),
                     ]
@@ -183,7 +183,7 @@ class PUCViewContent(ft.UserControl):
         if self.editing_codigo: # Estamos editando
             success = puc_logic.actualizar_cuenta(self.editing_codigo, nombre, naturaleza, clase, grupo_niif)
             if success:
-                mostrar_snackbar(self.page, f"Cuenta {self.editing_codigo} actualizada.", ft.colors.GREEN)
+                mostrar_snackbar(self.page, f"Cuenta {self.editing_codigo} actualizada.", ft.Colors.GREEN)
                 self.cerrar_dialogo(None)
                 self.cargar_cuentas()
             else:
@@ -194,7 +194,7 @@ class PUCViewContent(ft.UserControl):
         else: # Creando nueva cuenta
             success = puc_logic.agregar_cuenta(codigo, nombre, naturaleza, clase, grupo_niif)
             if success:
-                mostrar_snackbar(self.page, f"Cuenta {codigo} - {nombre} agregada.", ft.colors.GREEN)
+                mostrar_snackbar(self.page, f"Cuenta {codigo} - {nombre} agregada.", ft.Colors.GREEN)
                 self.cerrar_dialogo(None)
                 self.cargar_cuentas() # Recargar la tabla
             else:
@@ -212,7 +212,7 @@ class PUCViewContent(ft.UserControl):
             if ev.control.text == "Sí, Eliminar":
                 success = puc_logic.eliminar_cuenta(codigo_a_eliminar)
                 if success:
-                    mostrar_snackbar(self.page, f"Cuenta {codigo_a_eliminar} eliminada.", ft.colors.GREEN)
+                    mostrar_snackbar(self.page, f"Cuenta {codigo_a_eliminar} eliminada.", ft.Colors.GREEN)
                     self.cargar_cuentas()
                 else:
                     mostrar_snackbar(self.page, f"Error al eliminar cuenta {codigo_a_eliminar}. Verifique que no esté en uso.")
@@ -244,7 +244,7 @@ def PUCView(page: ft.Page):
         "/puc",
         appbar=ft.AppBar(
             title=ft.Text("Catálogo Contable (PUC)"),
-            bgcolor=ft.colors.SURFACE_VARIANT,
+            bgcolor=ft.Colors.SURFACE_VARIANT,
              leading=ft.IconButton(ft.icons.ARROW_BACK, on_click=lambda _: page.go("/dashboard"), tooltip="Volver al Dashboard")
         ),
         controls=[

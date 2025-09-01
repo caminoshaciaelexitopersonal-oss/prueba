@@ -48,7 +48,7 @@ class ReportesViewContent(ft.UserControl):
         self.reporte_container = ft.Container(
             content=self.tabla_reporte,
             expand=True,
-            border=ft.border.all(1, ft.colors.OUTLINE),
+            border=ft.border.all(1, ft.Colors.OUTLINE),
             border_radius=ft.border_radius.all(5)
         )
         self.progreso = ft.ProgressRing(visible=False)
@@ -108,7 +108,7 @@ class ReportesViewContent(ft.UserControl):
             elif tipo_reporte == "Balance General":
                 self.mostrar_balance_general(fecha_fin)
         except Exception as ex:
-            mostrar_snackbar(self.page, f"Error al generar el reporte: {ex}", ft.colors.RED)
+            mostrar_snackbar(self.page, f"Error al generar el reporte: {ex}", ft.Colors.RED)
         finally:
             self.progreso.visible = False
             self.update()
@@ -152,7 +152,7 @@ class ReportesViewContent(ft.UserControl):
                 ft.DataCell(ft.Text(format_currency(total_debitos), weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.RIGHT)),
                 ft.DataCell(ft.Text(format_currency(total_creditos), weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.RIGHT)),
                 ft.DataCell(ft.Text("")),
-            ], color=ft.colors.BLUE_GREY_50)
+            ], color=ft.Colors.BLUE_GREY_50)
         )
 
     def tipo_reporte_changed(self, e):
@@ -185,13 +185,13 @@ class ReportesViewContent(ft.UserControl):
         for cuenta in datos['costos']:
             add_row(f"{cuenta['codigo']} - {cuenta['nombre']}", -cuenta['saldo_final'], indent=True)
 
-        add_row("= Utilidad Bruta", datos['utilidad_bruta'], bold=True, color=ft.colors.BLUE_GREY_50)
+        add_row("= Utilidad Bruta", datos['utilidad_bruta'], bold=True, color=ft.Colors.BLUE_GREY_50)
 
         add_row("(-) Gastos Operacionales", -datos['total_gastos'], bold=True)
         for cuenta in datos['gastos']:
             add_row(f"{cuenta['codigo']} - {cuenta['nombre']}", -cuenta['saldo_final'], indent=True)
 
-        add_row("= Utilidad Antes de Impuestos", datos['utilidad_antes_impuestos'], bold=True, color=ft.colors.BLUE_GREY_100)
+        add_row("= Utilidad Antes de Impuestos", datos['utilidad_antes_impuestos'], bold=True, color=ft.Colors.BLUE_GREY_100)
 
     def mostrar_balance_general(self, fecha_fin):
         self.tabla_reporte.columns = [
@@ -209,23 +209,23 @@ class ReportesViewContent(ft.UserControl):
             ], color=color))
 
         # Activos
-        add_row("ACTIVOS", datos['total_activos'], bold=True, color=ft.colors.BLUE_50)
+        add_row("ACTIVOS", datos['total_activos'], bold=True, color=ft.Colors.BLUE_50)
         for cuenta in datos['activos']:
              add_row(f"{cuenta['codigo']} - {cuenta['nombre']}", cuenta['saldo_final'], indent=True)
 
         # Pasivos
-        add_row("PASIVOS", datos['total_pasivos'], bold=True, color=ft.colors.ORANGE_50)
+        add_row("PASIVOS", datos['total_pasivos'], bold=True, color=ft.Colors.ORANGE_50)
         for cuenta in datos['pasivos']:
              add_row(f"{cuenta['codigo']} - {cuenta['nombre']}", cuenta['saldo_final'], indent=True)
 
         # Patrimonio
-        add_row("PATRIMONIO", datos['total_patrimonio'], bold=True, color=ft.colors.GREEN_50)
+        add_row("PATRIMONIO", datos['total_patrimonio'], bold=True, color=ft.Colors.GREEN_50)
         for cuenta in datos['patrimonio']:
              add_row(f"{cuenta['codigo']} - {cuenta['nombre']}", cuenta['saldo_final'], indent=True)
         add_row("Resultado del Ejercicio", datos['resultado_del_ejercicio'], indent=True)
 
         # Verificación
-        color_verificacion = ft.colors.GREEN_100 if abs(datos['verificacion_ecuacion']) < 0.01 else ft.colors.RED_100
+        color_verificacion = ft.Colors.GREEN_100 if abs(datos['verificacion_ecuacion']) < 0.01 else ft.Colors.RED_100
         add_row("TOTAL PASIVO + PATRIMONIO", datos['total_pasivos'] + datos['total_patrimonio'], bold=True, color=color_verificacion)
         add_row("Verificación (Activo - Pasivo - Patrimonio)", datos['verificacion_ecuacion'], bold=True, color=color_verificacion)
 
@@ -240,7 +240,7 @@ def ReportesView(page: ft.Page):
         "/reportes",
         appbar=ft.AppBar(
             title=ft.Text("Informes y Reportes"),
-            bgcolor=ft.colors.SURFACE_VARIANT,
+            bgcolor=ft.Colors.SURFACE_VARIANT,
             leading=ft.IconButton(ft.icons.ARROW_BACK, on_click=lambda _: page.go("/dashboard"), tooltip="Volver al Dashboard")
         ),
         controls=[

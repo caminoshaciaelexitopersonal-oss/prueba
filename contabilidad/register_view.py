@@ -12,7 +12,7 @@ def RegisterView(page: ft.Page):
     confirm_password_field = ft.TextField(label="Confirmar Contraseña", password=True, can_reveal_password=True, width=300)
     nombre_empresa_field = ft.TextField(label="Nombre Empresa (Opcional)", width=300)
     nit_field = ft.TextField(label="NIT (Opcional)", width=300)
-    error_text = ft.Text(value="", color=ft.colors.RED, visible=False)
+    error_text = ft.Text(value="", color=ft.Colors.RED, visible=False)
 
     def handle_register(e):
         username = username_field.value.strip()
@@ -49,7 +49,7 @@ def RegisterView(page: ft.Page):
             user_id = crear_usuario(username, hashed_pass, nombre_empresa, nit)
 
             if user_id:
-                mostrar_snackbar(page, f"Usuario '{username}' registrado exitosamente. Inicia sesión.", ft.colors.GREEN)
+                mostrar_snackbar(page, f"Usuario '{username}' registrado exitosamente. Inicia sesión.", ft.Colors.GREEN)
                 page.go("/login") # Redirigir a login
             else:
                 mostrar_snackbar(page, f"El nombre de usuario '{username}' ya existe.")
@@ -77,7 +77,7 @@ def RegisterView(page: ft.Page):
             ft.Column(
                 [
                     ft.Text("Registro de Nuevo Usuario", size=24, weight=ft.FontWeight.BOLD),
-                    ft.Divider(height=20, color=ft.colors.TRANSPARENT),
+                    ft.Divider(height=20, color=ft.Colors.TRANSPARENT),
                     username_field,
                     password_field,
                     confirm_password_field,

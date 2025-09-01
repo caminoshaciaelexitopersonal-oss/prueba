@@ -7,45 +7,69 @@ import csv
 from typing import List, Dict, Any, Optional, Tuple
 from database import db_manager
 import datetime
+from langchain_core.tools import tool
 
 logger = logging.getLogger(__name__)
 
 # --- Lógica de Productos ---
+@tool
+def crear_producto(nombre: str, sku: str, descripcion: str, costo_inicial: float, cantidad_inicial: float) -> str:
+    """
+    Crea un nuevo producto en el sistema con su stock y costo iniciales.
 
-def crear_producto(nombre: str, sku: str, descripcion: str, costo_inicial: float = 0.0, cantidad_inicial: float = 0.0) -> Tuple[bool, Optional[int]]:
+    Args:
+        nombre (str): El nombre del producto.
+        sku (str): El código de referencia único (SKU) para el producto.
+        descripcion (str): Una breve descripción del producto.
+        costo_inicial (float): El costo de adquisición de cada unidad.
+        cantidad_inicial (float): La cantidad de unidades con la que se inicia el stock.
+
+    Returns:
+        str: Un mensaje de éxito con el ID del nuevo producto o un mensaje de error.
     """
-    Crea un nuevo producto en el sistema con stock inicial 0.
-    Si hay cantidad inicial, la registra a través de un movimiento de inventario.
-    """
-    # Crear el producto con cantidad 0. El stock se manejará solo con movimientos.
-    success, producto_id = db_manager.crear_producto_db(nombre, sku, descripcion, 0.0, 0.0)
+    success, producto_id_or_msg = db_manager.crear_producto_db(nombre, sku, descripcion, 0.0, 0.0)
 
     if not success:
-        return False, None
+        return f"Error: No se pudo crear el producto. {producto_id_or_msg}"
 
-    # Si se especificó una cantidad inicial, se registra como el primer movimiento
     if cantidad_inicial > 0:
-        registrar_movimiento_inventario(
-            producto_id=producto_id,
+        # Usar la función interna para registrar el movimiento
+        success_mov, msg_mov = _registrar_movimiento_interno(
+            producto_id=producto_id_or_msg,
             tipo_movimiento='ajuste_positivo',
             cantidad=cantidad_inicial,
             costo_unitario=costo_inicial,
             fecha=datetime.date.today().isoformat()
         )
+        if not success_mov:
+            return f"Producto creado con ID {producto_id_or_msg}, pero falló el registro del stock inicial: {msg_mov}"
 
-    return True, producto_id
+    return f"Éxito: Producto '{nombre}' creado con ID {producto_id_or_msg} y stock inicial de {cantidad_inicial}."
 
-def obtener_productos() -> List[Dict[str, Any]]:
-    """Obtiene una lista de todos los productos."""
-    return db_manager.obtener_productos_db()
+@tool
+def obtener_productos(filtro: Optional[str] = None) -> str:
+    """
+    Busca y obtiene una lista de productos del inventario.
+
+    Args:
+        filtro (Optional[str]): Un término de búsqueda para filtrar por nombre o SKU. Si se omite, devuelve todos los productos.
+
+    Returns:
+        str: Una cadena formateada con la lista de productos, su SKU, stock y costo.
+    """
+    productos = db_manager.obtener_productos_db(filtro=filtro)
+    if not productos:
+        return "No se encontraron productos con ese filtro."
+
+    return json.dumps(productos, indent=2, ensure_ascii=False)
+
 
 # --- Lógica de Movimientos de Inventario (Kardex) ---
+import json
 
-def registrar_movimiento_inventario(producto_id: int, tipo_movimiento: str, cantidad: float, costo_unitario: float, fecha: str, comprobante_id: Optional[int] = None) -> Tuple[bool, str]:
-    """
-    Registra un movimiento de inventario y actualiza el stock y costo del producto.
-    Devuelve (True, "Éxito") o (False, "Mensaje de error").
-    """
+# Se renombra a una versión interna para evitar confusión con la herramienta
+def _registrar_movimiento_interno(producto_id: int, tipo_movimiento: str, cantidad: float, costo_unitario: float, fecha: str, comprobante_id: Optional[int] = None) -> Tuple[bool, str]:
+    """Lógica interna para registrar un movimiento y actualizar el stock."""
     producto_actual = db_manager.obtener_producto_por_id_db(producto_id)
     if not producto_actual:
         msg = f"No se puede registrar movimiento. Producto con ID {producto_id} no encontrado."
@@ -91,6 +115,32 @@ def registrar_movimiento_inventario(producto_id: int, tipo_movimiento: str, cant
     finally:
         db_manager.close_connection(conn)
 
+@tool
+def registrar_movimiento_inventario(producto_id: int, tipo_movimiento: str, cantidad: float, costo_unitario: float) -> str:
+    """
+    Registra un movimiento de inventario (Kardex) para un producto, como una compra o una venta.
+
+    Args:
+        producto_id (int): El ID del producto que se está moviendo.
+        tipo_movimiento (str): El tipo de movimiento. Debe ser 'compra', 'venta', 'ajuste_positivo' o 'ajuste_negativo'.
+        cantidad (float): La cantidad de unidades que se mueven.
+        costo_unitario (float): El costo por unidad. Para una venta, este debería ser el costo promedio actual del producto.
+
+    Returns:
+        str: Un mensaje indicando el resultado de la operación.
+    """
+    fecha_hoy = datetime.date.today().isoformat()
+    success, message = _registrar_movimiento_interno(
+        producto_id=producto_id,
+        tipo_movimiento=tipo_movimiento,
+        cantidad=cantidad,
+        costo_unitario=costo_unitario,
+        fecha=fecha_hoy
+    )
+    if success:
+        return f"Éxito: Movimiento de inventario '{tipo_movimiento}' registrado para el producto ID {producto_id}."
+    else:
+        return f"Error al registrar movimiento: {message}"
 
 def obtener_kardex_producto(producto_id: int) -> List[Dict[str, Any]]:
     """

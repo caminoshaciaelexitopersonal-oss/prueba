@@ -27,7 +27,7 @@ def AuditoriaView(page: ft.Page):
         "/auditoria",
         appbar=ft.AppBar(
             title=ft.Text("Auditoría y Soporte"),
-            bgcolor=ft.colors.SURFACE_VARIANT,
+            bgcolor=ft.Colors.SURFACE_VARIANT,
             leading=ft.IconButton(ft.icons.ARROW_BACK, on_click=lambda _: page.go("/dashboard"), tooltip="Volver al Dashboard")
         ),
         controls=[

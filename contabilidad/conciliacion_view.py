@@ -12,7 +12,7 @@ class ConciliacionView(ft.View):
         self.page = page
         self.appbar = ft.AppBar(
             title=ft.Text("Conciliación Bancaria"),
-            bgcolor=ft.colors.SURFACE_VARIANT,
+            bgcolor=ft.Colors.SURFACE_VARIANT,
             leading=ft.IconButton(ft.icons.ARROW_BACK, on_click=lambda _: page.go("/dashboard"))
         )
 
@@ -82,7 +82,7 @@ class ConciliacionView(ft.View):
                 cells=[
                     ft.DataCell(ft.Text(t['fecha'])),
                     ft.DataCell(ft.Text(t['descripcion'])),
-                    ft.DataCell(ft.Text(format_currency(t['monto']), color=ft.colors.GREEN if t['monto'] > 0 else ft.colors.RED)),
+                    ft.DataCell(ft.Text(format_currency(t['monto']), color=ft.Colors.GREEN if t['monto'] > 0 else ft.Colors.RED)),
                 ],
                 data=t, # Guardar el diccionario completo en la fila
                 on_select_changed=self.on_row_select_changed
@@ -126,7 +126,7 @@ class ConciliacionView(ft.View):
         for row in self.tabla_banco.rows: row.color = ""
         for row in self.tabla_libros.rows: row.color = ""
 
-        color_sugerencia = ft.colors.LIGHT_BLUE_100
+        color_sugerencia = ft.Colors.LIGHT_BLUE_100
         for i, sugerencia in enumerate(sugerencias):
             trans_id = sugerencia['transaccion']['id']
             mov_id = sugerencia['movimiento']['id']
