@@ -107,3 +107,25 @@ def obtener_detalle_comprobante(comprobante_id: int) -> List[Dict[str, Any]]:
 
 
 # Más funciones de lógica contable irán aquí (ej: generar estados financieros)
+
+def registrar_asiento_desde_agente(descripcion: str, movimientos: List[Dict[str, Any]], usuario_id: int, fecha: Optional[str] = None) -> Tuple[bool, Optional[int]]:
+    """
+    Registra un asiento contable generado por un agente de IA.
+    Utiliza la fecha actual si no se proporciona una.
+    Asume un tipo de comprobante 'Diario'.
+    """
+    import datetime
+
+    if not fecha:
+        fecha = datetime.date.today().isoformat()
+
+    tipo_comprobante = "Diario" # Asumir un tipo de comprobante estándar para el agente
+
+    # Reutilizar la lógica de registro existente
+    return registrar_nuevo_comprobante(
+        fecha=fecha,
+        tipo=tipo_comprobante,
+        descripcion=descripcion,
+        movimientos=movimientos,
+        usuario_id=usuario_id
+    )
