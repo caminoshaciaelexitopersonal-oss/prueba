@@ -1,6 +1,8 @@
 import unittest
 import sys
 import os
+from unittest.mock import patch
+import datetime
 
 # Añadir el directorio raíz del proyecto al sys.path
 # para que los módulos como 'logic' puedan ser importados.
@@ -70,6 +72,45 @@ class TestContabilidadLogic(unittest.TestCase):
             {'debito': 0, 'credito': 99.9}
         ]
         self.assertFalse(contabilidad_logic.validar_partida_doble(movimientos))
+
+    @patch('contabilidad.contabilidad_logic.registrar_nuevo_comprobante')
+    def test_registrar_asiento_desde_agente_fecha_automatica(self, mock_registrar):
+        """Prueba que el asiento del agente usa la fecha actual si no se provee."""
+        mock_registrar.return_value = (True, 123) # Simular éxito
+
+        descripcion = "Test desde agente"
+        movimientos = [{'cuenta_codigo': '110505', 'debito': 100, 'credito': 0}]
+        usuario_id = 1
+
+        contabilidad_logic.registrar_asiento_desde_agente(descripcion, movimientos, usuario_id)
+
+        # Verificar que la función mock fue llamada
+        mock_registrar.assert_called_once()
+        # Verificar que fue llamada con los argumentos correctos
+        args, kwargs = mock_registrar.call_args
+        self.assertEqual(kwargs['fecha'], datetime.date.today().isoformat())
+        self.assertEqual(kwargs['tipo'], 'Diario')
+        self.assertEqual(kwargs['descripcion'], descripcion)
+        self.assertEqual(kwargs['movimientos'], movimientos)
+        self.assertEqual(kwargs['usuario_id'], usuario_id)
+
+    @patch('contabilidad.contabilidad_logic.registrar_nuevo_comprobante')
+    def test_registrar_asiento_desde_agente_fecha_especifica(self, mock_registrar):
+        """Prueba que el asiento del agente usa la fecha especificada."""
+        mock_registrar.return_value = (True, 124) # Simular éxito
+
+        descripcion = "Test desde agente con fecha"
+        movimientos = [{'cuenta_codigo': '110505', 'debito': 100, 'credito': 0}]
+        usuario_id = 2
+        fecha_especifica = "2023-05-20"
+
+        contabilidad_logic.registrar_asiento_desde_agente(descripcion, movimientos, usuario_id, fecha=fecha_especifica)
+
+        # Verificar que la función mock fue llamada
+        mock_registrar.assert_called_once()
+        # Verificar que fue llamada con los argumentos correctos
+        args, kwargs = mock_registrar.call_args
+        self.assertEqual(kwargs['fecha'], fecha_especifica)
 
 if __name__ == '__main__':
     unittest.main()
