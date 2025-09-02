@@ -1,10 +1,12 @@
 import sqlite3
-from typing import List, Optional
-from models.incident import Incident
+from typing import List
 import uuid
 from datetime import date
 
-# This DB_FILE must be the same as the one in the HR system
+# Corrected relative imports
+from .models.incident import Incident
+from .models.risk import Risk
+
 DB_FILE = "company_data.db"
 
 def get_db_connection():
@@ -14,10 +16,8 @@ def get_db_connection():
     return conn
 
 def init_db():
-    """Initializes the database and creates the incidents table if it doesn't exist."""
+    """Initializes the database and creates tables if they don't exist."""
     with get_db_connection() as conn:
-        # Note: The employees table is managed by the HR system's database module.
-        # This module only ensures the incidents table exists.
         conn.execute("""
             CREATE TABLE IF NOT EXISTS incidents (
                 id TEXT PRIMARY KEY,
@@ -27,6 +27,16 @@ def init_db():
                 description TEXT NOT NULL,
                 severity TEXT,
                 FOREIGN KEY (employee_id) REFERENCES employees (id)
+            );
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS risks (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                description TEXT NOT NULL,
+                area TEXT NOT NULL,
+                risk_level TEXT NOT NULL,
+                controls TEXT
             );
         """)
         conn.commit()
@@ -58,39 +68,7 @@ def list_incidents() -> List[Incident]:
             for row in rows
         ]
 
-def create_risks_table(conn):
-    """Creates the risks table if it doesn't exist."""
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS risks (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            description TEXT NOT NULL,
-            area TEXT NOT NULL,
-            risk_level TEXT NOT NULL,
-            controls TEXT
-        );
-    """)
-
-def init_db():
-    """Initializes the database and creates tables if they don't exist."""
-    with get_db_connection() as conn:
-        # Manages incidents table
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS incidents (
-                id TEXT PRIMARY KEY,
-                employee_id TEXT NOT NULL,
-                incident_date TEXT NOT NULL,
-                location TEXT NOT NULL,
-                description TEXT NOT NULL,
-                severity TEXT,
-                FOREIGN KEY (employee_id) REFERENCES employees (id)
-            );
-        """)
-        # Manages risks table
-        create_risks_table(conn)
-        conn.commit()
-
-def add_risk(risk) -> None:
+def add_risk(risk: Risk) -> None:
     """Adds a risk to the database."""
     with get_db_connection() as conn:
         conn.execute(
@@ -100,9 +78,8 @@ def add_risk(risk) -> None:
         )
         conn.commit()
 
-def list_risks() -> List:
+def list_risks() -> List[Risk]:
     """Lists all risks."""
-    from models.risk import Risk # Local import to avoid circular dependency if models need db
     with get_db_connection() as conn:
         cursor = conn.execute("SELECT * FROM risks ORDER BY area, name;")
         rows = cursor.fetchall()
@@ -114,9 +91,9 @@ def list_risks() -> List:
                     id=uuid.UUID(row["id"]),
                     name=row["name"],
                     description=row["description"],
-                    area=row["area"],
+                    area=row.get("area", "N/A"), # Using .get for safety
                     risk_level=row["risk_level"],
-                    controls=controls_str.split(", "),
+                    controls=controls_str.split(", ") if controls_str else [],
                 )
             )
         return risks
