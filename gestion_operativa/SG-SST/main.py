@@ -4,11 +4,8 @@ import sys
 import os
 import logging
 
-# --- Add project root to sys.path ---
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-
-from gestion_operativa.SG_SST.views.main_view import MainView
-from gestion_operativa.SG_SST.database import init_db
+from .views.main_view import MainView
+from .database import init_db
 
 # --- Basic Logging ---
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -31,7 +28,7 @@ def main(page: ft.Page):
         return
 
     # The MainView is a UserControl, so it needs to be placed in a View or directly on the page.
-    main_view_control = MainView()
+    main_view_control = MainView(page=page)
     page.add(main_view_control)
     page.update()
 

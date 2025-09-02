@@ -1,12 +1,10 @@
-# gestion_operativa/SG-SST/views/main_view.py
 import flet as ft
 import asyncio
-import json
 from .incident_view import IncidentView
 from .risk_view import RiskView
-from gestion_operativa.SG_SST.agents.corps.general_sgsst import GeneralSGSST
+from ..agents.corps.general_sgsst import GeneralSGSST
 
-# --- Clases de Chat ---
+# --- Clases de Chat (sin cambios) ---
 class Message:
     def __init__(self, user_name: str, text: str, message_type: str):
         self.user_name = user_name
@@ -19,8 +17,8 @@ class ChatMessage(ft.Row):
         self.controls = [
             ft.CircleAvatar(
                 content=ft.Text(message.user_name[:1].capitalize()),
-                color=ft.Colors.WHITE,
-                bgcolor=ft.Colors.BLUE_GREY_600 if message.message_type == "bot_message" else ft.Colors.RED_600
+                color=ft.colors.WHITE,
+                bgcolor=ft.colors.BLUE_GREY_600 if message.message_type == "bot_message" else ft.colors.RED_600
             ),
             ft.Column(
                 [
@@ -32,11 +30,12 @@ class ChatMessage(ft.Row):
             ),
         ]
 
-# --- Vista del Agente de IA ---
-class AgentChatView(ft.UserControl):
-    def __init__(self):
+# --- Vista del Agente de IA (hereda de ft.Column) ---
+class AgentChatView(ft.Column):
+    def __init__(self, page: ft.Page):
         super().__init__(expand=True)
-        self.general_sgsst = GeneralSGSST()
+        self.page = page
+        self.general_sgsst = GeneralSGSST(page=self.page)
         self.chat_list = ft.ListView(expand=True, spacing=10, auto_scroll=True)
         self.new_message = ft.TextField(
             hint_text="Escribe tu orden de SG-SST aquí...",
@@ -49,40 +48,42 @@ class AgentChatView(ft.UserControl):
             on_submit=self.send_message_click,
         )
         self.progress_ring = ft.ProgressRing(visible=False)
+        # Add controls in __init__ for Column
+        self.controls = [
+            self.chat_list,
+            ft.Row([self.progress_ring], alignment=ft.MainAxisAlignment.CENTER),
+            ft.Row(
+                [
+                    self.new_message,
+                    ft.IconButton(
+                        icon=ft.icons.SEND_ROUNDED,
+                        tooltip="Enviar Orden",
+                        on_click=self.send_message_click,
+                    ),
+                ],
+            ),
+        ]
 
     def did_mount(self):
-        self.add_message(Message("General SG-SST", "Hola, soy el General de SG-SST. Puedo ayudarte a reportar incidentes y gestionar riesgos.", "bot_message"))
-
-    def build(self):
-        return ft.Column(
-            [
-                self.chat_list,
-                ft.Row([self.progress_ring], alignment=ft.MainAxisAlignment.CENTER),
-                ft.Row(
-                    [
-                        self.new_message,
-                        ft.IconButton(
-                            icon=ft.icons.SEND_ROUNDED,
-                            tooltip="Enviar Orden",
-                            on_click=self.send_message_click,
-                        ),
-                    ],
-                ),
-            ],
-            expand=True
-        )
+        self.add_message(Message("General SG-SST", "Hola, soy el General de SG-SST.", "bot_message"))
 
     def add_message(self, message: Message):
         self.chat_list.controls.append(ChatMessage(message))
-        self.update()
+        if self.page: self.page.update()
 
     async def send_message_click(self, e):
         user_message_text = self.new_message.value
         if not user_message_text: return
-        self.new_message.value = ""
+
+        # Add user message and clear input
         self.add_message(Message("Tú", user_message_text, "user_message"))
+        self.new_message.value = ""
+
+        # Show progress and disable input
         self.progress_ring.visible = True
-        self.update()
+        self.new_message.disabled = True
+        if self.page: self.page.update()
+
         try:
             bot_response_text = await asyncio.to_thread(
                 self.general_sgsst.process_command, user_message_text
@@ -91,55 +92,43 @@ class AgentChatView(ft.UserControl):
         except Exception as ex:
             self.add_message(Message("Error", f"Ocurrió un error: {ex}", "bot_message"))
         finally:
+            # Hide progress and re-enable input
             self.progress_ring.visible = False
-            self.update()
+            self.new_message.disabled = False
+            if self.page: self.page.update()
 
-# --- Vista Principal Modificada ---
-class MainView(ft.UserControl):
-    def __init__(self):
+# --- Vista Principal (hereda de ft.Row) ---
+class MainView(ft.Row):
+    def __init__(self, page: ft.Page):
         super().__init__(expand=True)
+        self.page = page
         self.incident_view = IncidentView()
         self.risk_view = RiskView()
-        self.agent_view = AgentChatView()
+        self.agent_view = AgentChatView(page=self.page)
 
         self.navigation_rail = ft.NavigationRail(
-            selected_index=0,
+            selected_index=2, # Start on Agent view
             label_type=ft.NavigationRailLabelType.ALL,
             destinations=[
-                ft.NavigationRailDestination(
-                    icon=ft.icons.WARNING_AMBER,
-                    selected_icon=ft.icons.WARNING,
-                    label="Incidentes",
-                ),
-                ft.NavigationRailDestination(
-                    icon=ft.icons.SHIELD_OUTLINED,
-                    selected_icon=ft.icons.SHIELD,
-                    label="Riesgos",
-                ),
-                ft.NavigationRailDestination(
-                    icon=ft.icons.INTELLIGENT_TOY,
-                    selected_icon=ft.icons.INTELLIGENT_TOY_OUTLINED,
-                    label="Asistente IA",
-                ),
+                ft.NavigationRailDestination(icon=ft.icons.WARNING_AMBER, label="Incidentes"),
+                ft.NavigationRailDestination(icon=ft.icons.SHIELD_OUTLINED, label="Riesgos"),
+                ft.NavigationRailDestination(icon=ft.icons.INTELLIGENT_TOY, label="Asistente IA"),
             ],
             on_change=self.nav_change,
         )
 
         self.content_area = ft.Container(
-            content=self.incident_view,
+            content=self.agent_view,
             expand=True,
             padding=ft.padding.all(20),
         )
 
-    def build(self):
-        return ft.Row(
-            controls=[
-                self.navigation_rail,
-                ft.VerticalDivider(width=1),
-                self.content_area,
-            ],
-            expand=True,
-        )
+        # Add controls in __init__ for Row
+        self.controls = [
+            self.navigation_rail,
+            ft.VerticalDivider(width=1),
+            self.content_area,
+        ]
 
     def nav_change(self, e):
         index = e.control.selected_index
@@ -149,4 +138,4 @@ class MainView(ft.UserControl):
             self.content_area.content = self.risk_view
         elif index == 2:
             self.content_area.content = self.agent_view
-        self.update()
+        if self.page: self.page.update()
