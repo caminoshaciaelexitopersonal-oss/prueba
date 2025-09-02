@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/app/gestion_operativa/SG-SST/main.py", line 10, in <module>
+    from gestion_operativa.SG_SST.views.main_view import MainView
+ModuleNotFoundError: No module named 'gestion_operativa.SG_SST'

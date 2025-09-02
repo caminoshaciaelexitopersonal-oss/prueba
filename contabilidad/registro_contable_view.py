@@ -41,7 +41,7 @@ class RegistroContableViewContent(ft.UserControl):
         # Totales
         self.total_debito_text = ft.Text("Total Débito: $ 0", weight=ft.FontWeight.BOLD)
         self.total_credito_text = ft.Text("Total Crédito: $ 0", weight=ft.FontWeight.BOLD)
-        self.diferencia_text = ft.Text("Diferencia: $ 0", color=ft.colors.GREEN, weight=ft.FontWeight.BOLD)
+        self.diferencia_text = ft.Text("Diferencia: $ 0", color=ft.Colors.GREEN, weight=ft.FontWeight.BOLD)
 
         # Lista de comprobantes recientes
         self.tabla_comprobantes = ft.DataTable(
@@ -115,7 +115,7 @@ class RegistroContableViewContent(ft.UserControl):
                      ], alignment=ft.MainAxisAlignment.START),
                  ft.Container(
                       content=self.movimientos_container,
-                      # border=ft.border.all(1, ft.colors.OUTLINE),
+                      # border=ft.border.all(1, ft.Colors.OUTLINE),
                       padding=ft.padding.only(bottom=5),
                       height=200, # Altura fija para el área de movimientos scrollable
                  ),
@@ -147,7 +147,7 @@ class RegistroContableViewContent(ft.UserControl):
                     content=self.tabla_comprobantes,
                     expand=False, # No expandir verticalmente aquí, o se sale
                     # height=300 # Podrías limitar la altura si quieres
-                    border=ft.border.all(1, ft.colors.OUTLINE), # Borde opcional
+                    border=ft.border.all(1, ft.Colors.OUTLINE), # Borde opcional
                     border_radius=ft.border_radius.all(5)
                  ),
                  ft.IconButton(icon=ft.icons.REFRESH, tooltip="Recargar Comprobantes", on_click=lambda e: self.cargar_comprobantes_recientes())
@@ -208,7 +208,7 @@ class RegistroContableViewContent(ft.UserControl):
         # Botón eliminar esta fila específica
         delete_button = ft.IconButton(
             ft.icons.REMOVE_CIRCLE_OUTLINE,
-            icon_color=ft.colors.RED,
+            icon_color=ft.Colors.RED,
             tooltip="Eliminar Movimiento",
             data=None, # Se establecerá después
             on_click=self.eliminar_fila_movimiento
@@ -272,7 +272,7 @@ class RegistroContableViewContent(ft.UserControl):
 
         diferencia = total_debito - total_credito
         self.diferencia_text.value = f"Diferencia: {format_currency(diferencia)}"
-        self.diferencia_text.color = ft.colors.RED if abs(diferencia) > 0.01 else ft.colors.GREEN # Rojo si no cuadra
+        self.diferencia_text.color = ft.Colors.RED if abs(diferencia) > 0.01 else ft.Colors.GREEN # Rojo si no cuadra
 
         self.update() # Actualiza los textos de totales
 
@@ -303,7 +303,7 @@ class RegistroContableViewContent(ft.UserControl):
                          'vida_util_estimada': vida_util_estimada_field.value,
                      })
              except (ValueError, IndexError, StopIteration, AttributeError):
-                 mostrar_snackbar(self.page, "Error al procesar una fila de movimiento. Verifique los datos.", ft.colors.ORANGE)
+                 mostrar_snackbar(self.page, "Error al procesar una fila de movimiento. Verifique los datos.", ft.Colors.ORANGE)
                  # Podrías decidir detener el proceso o solo saltar la fila
                  continue # Saltar fila con error y continuar
         return datos_movimientos
@@ -312,7 +312,7 @@ class RegistroContableViewContent(ft.UserControl):
     def guardar_comprobante(self, e):
         """Valida y guarda el comprobante y sus movimientos."""
         if not self.user_id:
-             mostrar_snackbar(self.page, "Error: Sesión de usuario no válida.", ft.colors.RED)
+             mostrar_snackbar(self.page, "Error: Sesión de usuario no válida.", ft.Colors.RED)
              return
 
         fecha = self.fecha_display.value # Ya está en formato AAAA-MM-DD
@@ -340,7 +340,7 @@ class RegistroContableViewContent(ft.UserControl):
         )
 
         if success:
-            mostrar_snackbar(self.page, f"Comprobante {comprobante_id} guardado exitosamente.", ft.colors.GREEN)
+            mostrar_snackbar(self.page, f"Comprobante {comprobante_id} guardado exitosamente.", ft.Colors.GREEN)
             self.limpiar_formulario_comprobante()
             self.cargar_comprobantes_recientes() # Recargar la lista
         else:
@@ -445,7 +445,7 @@ def RegistroContableView(page: ft.Page):
         "/registro_contable",
         appbar=ft.AppBar(
             title=ft.Text("Registro Contable"),
-            bgcolor=ft.colors.SURFACE_VARIANT,
+            bgcolor=ft.Colors.SURFACE_VARIANT,
              leading=ft.IconButton(ft.icons.ARROW_BACK, on_click=lambda _: page.go("/dashboard"), tooltip="Volver al Dashboard")
         ),
         controls=[

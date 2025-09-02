@@ -62,7 +62,7 @@ def main(page: ft.Page):
     except Exception as e:
         logger.critical(f"Error CRÍTICO al inicializar la base de datos: {e}")
         # Mostrar error crítico en la UI y detener?
-        page.add(ft.Text(f"Error fatal al iniciar la BD: {e}", color=ft.colors.RED))
+        page.add(ft.Text(f"Error fatal al iniciar la BD: {e}", color=ft.Colors.RED))
         return  # Detener la carga de la app
 
     # --- Definición de Rutas y Vistas ---

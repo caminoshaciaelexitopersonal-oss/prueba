@@ -41,7 +41,7 @@ def ConfigRegimenView(page: ft.Page):
             success = actualizar_regimen_usuario(user_id, nuevo_regimen)
             if success:
                 page.session.set("regimen_tributario", nuevo_regimen) # Actualizar sesión
-                mostrar_snackbar(page, f"Régimen actualizado a '{nuevo_regimen}'.", ft.colors.GREEN)
+                mostrar_snackbar(page, f"Régimen actualizado a '{nuevo_regimen}'.", ft.Colors.GREEN)
                 cargar_regimen_actual() # Recargar para mostrar
                 page.go("/dashboard") # Opcional: redirigir después de guardar
             else:
@@ -55,20 +55,20 @@ def ConfigRegimenView(page: ft.Page):
 
     return ft.View(
         "/config_regimen",
-         appbar=ft.AppBar(title=ft.Text("Configuración Fiscal"), bgcolor=ft.colors.SURFACE_VARIANT),
+         appbar=ft.AppBar(title=ft.Text("Configuración Fiscal"), bgcolor=ft.Colors.SURFACE_VARIANT),
          controls=[
              ft.Column(
                  [
                      ft.Text("Configuración del Régimen Fiscal", size=20, weight=ft.FontWeight.BOLD),
-                     ft.Divider(height=15, color=ft.colors.TRANSPARENT),
+                     ft.Divider(height=15, color=ft.Colors.TRANSPARENT),
                      current_regimen,
-                     ft.Divider(height=10, color=ft.colors.TRANSPARENT),
+                     ft.Divider(height=10, color=ft.Colors.TRANSPARENT),
                      regimen_dropdown,
                      ft.ElevatedButton("Guardar Régimen", on_click=guardar_regimen),
-                     ft.Divider(height=20, color=ft.colors.TRANSPARENT),
+                     ft.Divider(height=20, color=ft.Colors.TRANSPARENT),
                      ft.Text("Seleccionar tu régimen (Común, Simplificado, Especial) es crucial.", italic=True),
                      ft.Text("Esto habilitará funciones como cálculo de IVA y Retenciones si aplican.", italic=True),
-                     ft.Divider(height=10, color=ft.colors.TRANSPARENT),
+                     ft.Divider(height=10, color=ft.Colors.TRANSPARENT),
                      ft.TextButton("Volver al Dashboard", icon=ft.icons.ARROW_BACK, on_click=lambda _: page.go("/dashboard"))
                  ],
                  spacing=10,

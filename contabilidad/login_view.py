@@ -9,7 +9,7 @@ def LoginView(page: ft.Page):
 
     username_field = ft.TextField(label="Usuario", width=300)
     password_field = ft.TextField(label="Contraseña", password=True, can_reveal_password=True, width=300)
-    error_text = ft.Text(value="", color=ft.colors.RED, visible=False)
+    error_text = ft.Text(value="", color=ft.Colors.RED, visible=False)
 
     def handle_login(e):
         username = username_field.value.strip()
@@ -30,7 +30,7 @@ def LoginView(page: ft.Page):
             if user_data and verify_password(user_data['password_hash'], password):
                 page.session.set("user_id", user_data['id'])
                 page.session.set("username", user_data['username'])
-                mostrar_snackbar(page, f"Bienvenido, {username}!", ft.colors.GREEN)
+                mostrar_snackbar(page, f"Bienvenido, {username}!", ft.Colors.GREEN)
                 page.go("/dashboard")
             else:
                 mostrar_snackbar(page, "Usuario o contraseña incorrectos.")
@@ -53,7 +53,7 @@ def LoginView(page: ft.Page):
             ft.Column(
                 [
                     ft.Text("Inicio de Sesión", size=24, weight=ft.FontWeight.BOLD),
-                    ft.Divider(height=20, color=ft.colors.TRANSPARENT),
+                    ft.Divider(height=20, color=ft.Colors.TRANSPARENT),
                     username_field,
                     password_field,
                     error_text,

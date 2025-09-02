@@ -1,7 +1,7 @@
 # utils/helpers.py
 import flet as ft
 
-def mostrar_snackbar(page: ft.Page, mensaje: str, color: str = ft.colors.RED):
+def mostrar_snackbar(page: ft.Page, mensaje: str, color: str = ft.Colors.RED):
     """Muestra un mensaje temporal en la parte inferior."""
     page.show_snack_bar(
         ft.SnackBar(ft.Text(mensaje), bgcolor=color)

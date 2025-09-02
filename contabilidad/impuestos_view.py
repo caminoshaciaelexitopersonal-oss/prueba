@@ -35,7 +35,7 @@ def ImpuestosViewContent(page: ft.Page):
             ft.Text("- Gestión de IVA y Retenciones adaptada (en desarrollo)."),
         ])
     else:
-        content_controls.append(ft.Text("Seleccione un régimen tributario en la configuración para ver las opciones aplicables.", color=ft.colors.ORANGE))
+        content_controls.append(ft.Text("Seleccione un régimen tributario en la configuración para ver las opciones aplicables.", color=ft.Colors.ORANGE))
 
     content_controls.append(ft.Divider(height=20))
     content_controls.append(ft.Text("Módulo en construcción.", italic=True))
@@ -59,7 +59,7 @@ def ImpuestosView(page: ft.Page):
         "/impuestos",
         appbar=ft.AppBar(
             title=ft.Text("IVA y Retenciones"),
-            bgcolor=ft.colors.SURFACE_VARIANT,
+            bgcolor=ft.Colors.SURFACE_VARIANT,
              leading=ft.IconButton(ft.icons.ARROW_BACK, on_click=lambda _: page.go("/dashboard"), tooltip="Volver al Dashboard")
         ),
         controls=[
