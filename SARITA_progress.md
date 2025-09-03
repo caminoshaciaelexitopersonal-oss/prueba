@@ -1,22 +1,29 @@
-# SARITA Project Progress
+# Reporte de Progreso del Proyecto SARITA
 
-## Completed Tasks:
+## Estado General: Fase de Reestructuración Arquitectónica Completada
 
-*   [x] Created the SARITA project directory.
-*   [x] Moved the existing files (`agents.py`, `registro_contable_view.py`, `puc_view.py`, `config_regimen_view.py`, `dashboard_view.py`, `SARITA_plan.md`) into the SARITA directory.
-*   [x] Created the `LLM` and `agentes` directories inside the SARITA directory.
-*   [x] Moved the `agents.py` file into the `SARITA/agentes` directory.
-*   [x] Created the `cliente`, `gestion_institucional`, `gestion_misional`, and `Mi_negocio` directories.
-## Pending Tasks:
+Se ha finalizado con éxito la fase inicial de reestructuración, migrando la lógica de negocio de los módulos monolíticos a una arquitectura de microservicios basada en agentes.
 
-*   [ ] Install Python and pip.
-*   [ ] Install the `langchain` and `langgraph` libraries.
-*   [ ] Organize the files into the `cliente`, `gestion_institucional`, `gestion_misional`, and `Mi_negocio` directories.
-*   [ ] Define the responsibilities and workflows of each agent type.
-*   [ ] Implement communication between the agents using LangGraph.
-*   [ ] Implement the MCA, MCP, and PWA functionalities.
-*   [ ] Integrate blockchain and Firecrawl.
-*   [ ] Develop the Flet views.
-*   [ ] Implement the business logic.
-*   [ ] Implement the database.
-*   [ ] Implement testing and deployment.
+---
+
+### **Microservicio: `gestion_operativa/SG-SST`**
+
+*   **[x] Estado: COMPLETADO**
+*   **[x] Arquitectura Definida:** Se creó el documento `SGSST_ARCHITECTURE.md` con la definición de 18 módulos (capitanes) y 95 funcionalidades (equipos tácticos).
+*   **[x] Estructura de Agentes Implementada:** Se eliminó la estructura de agentes antigua y se crearon los 18 nuevos archivos de módulos `.py` en el directorio `agents/corps/capitanes/`.
+
+---
+
+### **Microservicio: `inventario`**
+
+*   **[x] Estado: COMPLETADO**
+*   **[x] Arquitectura Definida:** Se creó el documento `INVENTORY_ARCHITECTURE.md` con la definición de 10 módulos (capitanes) y sus funcionalidades asociadas.
+*   **[x] Estructura de Agentes Implementada:** Se eliminó la estructura de agentes antigua y se crearon los 10 nuevos archivos de módulos `.py` en el directorio `agents/corps/`.
+
+---
+
+## Próximos Pasos Sugeridos
+
+*   **Fase de Implementación de Lógica:** Rellenar cada uno de los nuevos módulos (`.py`) con la lógica de negocio correspondiente a las funcionalidades definidas en los documentos de arquitectura.
+*   **Fase de Pruebas:** Desarrollar y ejecutar pruebas unitarias y de integración para cada microservicio.
+*   **Configuración de Comunicación:** Establecer los mecanismos de comunicación entre los microservicios si es necesario.
