@@ -4,7 +4,8 @@ import os
 import uuid
 import datetime
 import json
-from models.data_models import Customer, Lead, Interaction, SupportTicket
+from typing import List, Dict, Any, Optional
+from gestion_comercial.sistema_comercial.models.data_models import Customer, Lead, Interaction, SupportTicket
 
 # Define the database file path relative to this file
 db_file = "sistema_comercial.db"
@@ -119,6 +120,40 @@ def get_all_customers() -> List[Customer]:
             interests = json.loads(row.interests) if row.interests else []
             customers.append(Customer(**{**row._asdict(), "interests": interests}))
     return customers
+
+# --- CRUD Functions for Leads ---
+
+def add_lead(lead: Lead) -> Lead:
+    with Session() as session:
+        stmt = leads_table.insert().values(
+            id=lead.id,
+            customer_id=lead.customer_id,
+            source=lead.source,
+            status=lead.status,
+            pipeline_stage=lead.pipeline_stage,
+            estimated_value=lead.estimated_value,
+            probability=lead.probability,
+            assigned_agent_id=lead.assigned_agent_id,
+            created_at=lead.created_at
+        )
+        session.execute(stmt)
+        session.commit()
+        return lead
+
+def get_lead_by_id(lead_id: str) -> Optional[Lead]:
+    with Session() as session:
+        stmt = sa.select(leads_table).where(leads_table.c.id == lead_id)
+        result = session.execute(stmt).first()
+        if result:
+            return Lead(**result._asdict())
+        return None
+
+def update_lead_status(lead_id: str, status: str, pipeline_stage: str) -> bool:
+    with Session() as session:
+        stmt = sa.update(leads_table).where(leads_table.c.id == lead_id).values(status=status, pipeline_stage=pipeline_stage)
+        result = session.execute(stmt)
+        session.commit()
+        return result.rowcount > 0
 
 
 if __name__ == "__main__":

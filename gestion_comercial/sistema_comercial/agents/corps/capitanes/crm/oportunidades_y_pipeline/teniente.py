@@ -1,17 +1,17 @@
 import flet as ft
-from .sargento import SargentoRegistroPerfil360
+from .sargento import SargentoOportunidadesYPipeline
 
-class TenienteRegistroPerfil360:
+class TenienteOportunidadesYPipeline:
     def __init__(self, page: ft.Page):
         self.page = page
-        self.sargento = SargentoRegistroPerfil360(page=self.page)
-        print("Teniente de Registro y Perfil 360: A la orden.")
+        self.sargento = SargentoOportunidadesYPipeline(page=self.page)
+        print("Teniente de Oportunidades y Pipeline: A la orden.")
 
     def ejecutar_operacion(self, operacion: str) -> str:
         """
         Recibe una operación del capitán y la delega al sargento.
         """
-        print(f"Teniente (Registro y Perfil): Operación recibida - '{operacion}'.")
+        print(f"Teniente (Pipeline): Operación recibida - '{operacion}'.")
         print("Teniente: Pasando tarea al sargento.")
 
         resultado_sargento = self.sargento.ejecutar_tarea(operacion)

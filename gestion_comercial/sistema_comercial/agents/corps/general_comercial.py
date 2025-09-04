@@ -6,8 +6,9 @@ from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode
 
-# Import the first captain
+# Import captains
 from .capitanes.crm.capitan_registro_y_perfil_360 import CapitanRegistroPerfil360
+from .capitanes.crm.capitan_oportunidades_y_pipeline import CapitanOportunidadesYPipeline
 
 class AgentState(TypedDict):
     messages: Annotated[Sequence[BaseMessage], lambda x, y: x + y]
@@ -18,6 +19,7 @@ class GeneralComercial:
 
         # Instantiate captains
         self.capitan_registro = CapitanRegistroPerfil360(page=self.page)
+        self.capitan_pipeline = CapitanOportunidadesYPipeline(page=self.page)
         # ... other captains will be instantiated here in the future
 
         # Define tools for the general
@@ -31,7 +33,17 @@ class GeneralComercial:
             """
             return self.capitan_registro.ejecutar_mision(mision)
 
-        tools = [gestionar_perfil_cliente]
+        @tool
+        def gestionar_pipeline_ventas(mision: str) -> str:
+            """
+            Use this tool for any task related to sales opportunities or leads, such as creating a new lead or updating its status.
+            The 'mision' should be a string containing the detailed command, for example:
+            "command='add', customer_id='some-uuid', source='website'"
+            or "command='update', lead_id='another-uuid', new_status='contactado', new_pipeline_stage='negociacion'"
+            """
+            return self.capitan_pipeline.ejecutar_mision(mision)
+
+        tools = [gestionar_perfil_cliente, gestionar_pipeline_ventas]
 
         # Configure the graph
         # NOTE: An API key needs to be configured in the environment for this to work.
@@ -65,9 +77,21 @@ class GeneralComercial:
                 print(f"--- Salida del nodo: {key} ---")
             final_state = output
 
-        # The final result is usually in the last message from the agent
-        last_message = final_state.get('agent', {}).get('messages', [])[-1]
-        result = last_message.content if isinstance(last_message.content, str) else str(last_message)
+        # The final result is the content of the last ToolMessage
+        # The 'action' node in the state contains the output of the ToolNode
+        action = final_state.get('action', {})
+        if action:
+            tool_messages = action.get('messages', [])
+            if tool_messages:
+                result = tool_messages[-1].content
+            else:
+                 # If no tool output, return the last agent message
+                last_agent_message = final_state.get('agent', {}).get('messages', [])[-1]
+                result = last_agent_message.content if isinstance(last_agent_message.content, str) else str(last_agent_message)
+        else:
+            # If no action node, return the last agent message
+            last_agent_message = final_state.get('agent', {}).get('messages', [])[-1]
+            result = last_agent_message.content if isinstance(last_agent_message.content, str) else str(last_agent_message)
 
         print(f"General Comercial: Misión completada. Resultado: {result}")
         return result
