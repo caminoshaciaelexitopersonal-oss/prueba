@@ -1,59 +1,45 @@
+import requests
 from langchain_core.tools import tool
-import gestion_comercial.sistema_comercial.database as db
-from gestion_comercial.sistema_comercial.models.data_models import Customer
-import json
+
+# This configuration would be passed dynamically in a real app
+API_BASE_URL = "http://127.0.0.1:5001"
+# The API key would also be passed dynamically based on the tenant
+TENANT_API_KEY = "inquilino_demo_key"
 
 @tool
-def add_new_customer(name: str, email: str, phone: str, address: str = "", age: int = 0, location: str = "", interests: list = []) -> str:
+def get_attendance_report_tool(query: str) -> str:
     """
-    Adds a new customer to the database.
-
-    Args:
-        name: The customer's full name.
-        email: The customer's email address.
-        phone: The customer's phone number.
-        address: The customer's physical address.
-        age: The customer's age.
-        location: The customer's city or region.
-        interests: A list of the customer's interests, provided as a JSON string list (e.g., '["tech", "music"]').
-
-    Returns:
-        A confirmation message with the new customer's ID.
+    Útil para obtener un informe o listado de asistencia de alumnos.
+    Responde con los datos del reporte en formato JSON o un mensaje de error.
+    El parámetro 'query' no se usa actualmente pero es requerido por el decorador.
     """
+    print("--- Usando la herramienta: get_attendance_report_tool ---")
+    headers = {"X-API-KEY": TENANT_API_KEY}
     try:
-        # If interests are provided as a string, parse them.
-        if isinstance(interests, str):
-            interests_list = json.loads(interests.replace("'", '"'))
-        else:
-            interests_list = interests
+        response = requests.get(f"{API_BASE_URL}/api/reportes/asistencia", headers=headers)
+        response.raise_for_status()
+        report_data = response.json()
+        if not report_data:
+            return "No se encontraron datos de asistencia."
+        # Return a summary or the full data as a string
+        return f"Se encontraron {len(report_data)} registros de asistencia. Aquí están los primeros: {str(report_data[:3])}"
+    except requests.exceptions.RequestException as e:
+        return f"Error al llamar a la API: {e}"
 
-        new_customer = Customer(
-            name=name,
-            email=email,
-            phone=phone,
-            address=address,
-            age=age,
-            location=location,
-            interests=interests_list
-        )
-        db.add_customer(new_customer)
-        return f"Éxito: Cliente '{name}' añadido con ID {new_customer.id}."
-    except Exception as e:
-        return f"Error al añadir cliente: {e}"
-
-
+# Example of another potential tool
 @tool
-def get_customer_details(customer_id: str) -> str:
+def find_user_by_name(name: str) -> str:
     """
-    Retrieves the full details of a customer by their ID.
-
-    Args:
-        customer_id: The unique ID of the customer.
-
-    Returns:
-        A JSON string with the customer's details or an error message.
+    Busca un usuario en el sistema por su nombre completo.
+    Responde con la información del usuario o un mensaje si no se encuentra.
     """
-    customer = db.get_customer_by_id(customer_id)
-    if customer:
-        return json.dumps(customer.__dict__, default=str)
-    return f"Error: No se encontró ningún cliente con el ID {customer_id}."
+    # This is a placeholder for a future API endpoint
+    print(f"--- Usando la herramienta: find_user_by_name con el nombre: {name} ---")
+    # Placeholder logic
+    if "demo" in name.lower():
+        return f"Se encontró al usuario '{name}' con el rol 'profesor' en el área de 'Deportes'."
+    else:
+        return f"No se encontró ningún usuario con el nombre '{name}'."
+
+# A list of all available tools for the agent
+available_tools = [get_attendance_report_tool, find_user_by_name]
