@@ -1,0 +1,20 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment variables
+.env
+.env.*
+
+# Log files
+*.log
+
+# Test outputs
+.pytest_cache/
+coverage.xml
+
+# Output files from agent tools
+sgsst_riesgos.txt
+sgsst_inspecciones.txt
