@@ -44,7 +44,7 @@ def route_to_captain(state: AgentState):
         return {"captain": captain_name}
 
     print("---ROUTER INTELIGENTE DE CAPITANES (SG-SST)---")
-    llm = ChatOpenAI(model="gpt-4-turbo", temperature=0)
+    llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
     captain_names = [c['name'] for c in CAPTAIN_INFO] + ["fallback"]
     CaptainName = Literal[tuple(captain_names)]
     class CaptainRouter(BaseModel):
