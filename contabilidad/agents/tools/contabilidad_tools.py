@@ -51,6 +51,29 @@ def generar_estado_resultados_tool(fecha_inicio: str, fecha_fin: str) -> str:
     except Exception as e:
         return f"Ocurrió un error al generar el Estado de Resultados: {e}"
 
+@tool
+async def abrir_periodo_contable_tool(query: str) -> str:
+    """
+    Abre un nuevo periodo contable para permitir el registro de transacciones.
+    Extrae el nombre del periodo del query del usuario.
+    Ejemplo de query: 'Abrir el periodo contable de Octubre 2025'.
+    """
+    print(f"--- Herramienta: abrir_periodo_contable ---")
+    print(f"Orden recibida: {query}")
+    try:
+        # Lógica simple para extraer el periodo del query.
+        # Una versión más avanzada usaría regex o un LLM.
+        parts = query.split(" de ")
+        periodo = parts[-1] if len(parts) > 1 else "Periodo no especificado"
+
+        # Aquí iría la lógica de negocio real (ej. cambiar un flag en la DB).
+        # Por ahora, simulamos el éxito.
+        print(f"ACCIÓN: Abriendo el periodo '{periodo}' en el sistema.")
+
+        return f"Éxito. El periodo '{periodo}' ha sido abierto y está listo para registrar transacciones."
+    except Exception as e:
+        return f"Ocurrió un error al intentar abrir el periodo contable: {e}"
+
 # --- Lista Consolidada de Herramientas ---
 # Este es el "equipo táctico" completo para el módulo de contabilidad.
 contabilidad_tools = [
@@ -59,4 +82,5 @@ contabilidad_tools = [
     registrar_comprobante_tool,
     generar_balance_general_tool,
     generar_estado_resultados_tool,
+    abrir_periodo_contable_tool,
 ]
