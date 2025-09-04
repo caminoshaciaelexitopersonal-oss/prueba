@@ -4,6 +4,7 @@ import os
 import uuid
 import datetime
 import json
+from models.data_models import Customer, Lead, Interaction, SupportTicket
 
 # Define the database file path relative to this file
 db_file = "sistema_comercial.db"
@@ -13,92 +14,114 @@ Session = sessionmaker(bind=engine)
 
 metadata = sa.MetaData()
 
-# Define tables using SQLAlchemy Core
+# --- Table Definitions ---
+
 customers_table = sa.Table(
     "customers",
     metadata,
     sa.Column("id", sa.String, primary_key=True, default=lambda: str(uuid.uuid4())),
     sa.Column("name", sa.String, nullable=False),
+    sa.Column("email", sa.String, unique=True),
     sa.Column("phone", sa.String),
-    sa.Column("email", sa.String),
-    sa.Column("status", sa.String, default="Nuevo"),
+    sa.Column("address", sa.String),
+    sa.Column("age", sa.Integer),
+    sa.Column("location", sa.String),
+    sa.Column("interests", sa.String), # Storing list as JSON string
+    sa.Column("status", sa.String, default="prospecto"),
+    sa.Column("value_tier", sa.String, default="medio"),
+    sa.Column("preferred_channel", sa.String),
+    sa.Column("created_at", sa.DateTime, default=sa.func.now()),
+    sa.Column("updated_at", sa.DateTime, default=sa.func.now(), onupdate=sa.func.now()),
 )
 
-products_table = sa.Table(
-    "products",
-    metadata,
-    sa.Column("id", sa.String, primary_key=True, default=lambda: str(uuid.uuid4())),
-    sa.Column("name", sa.String, nullable=False, unique=True),
-    sa.Column("price", sa.Float, nullable=False),
-)
-
-orders_table = sa.Table(
-    "orders",
+interactions_table = sa.Table(
+    "interactions",
     metadata,
     sa.Column("id", sa.String, primary_key=True, default=lambda: str(uuid.uuid4())),
     sa.Column("customer_id", sa.String, sa.ForeignKey("customers.id"), nullable=False),
-    sa.Column("status", sa.String, default="pending"), # pending -> completed -> invoiced
-    sa.Column("total_amount", sa.Float, default=0.0),
+    sa.Column("channel", sa.String),
+    sa.Column("content", sa.Text),
+    sa.Column("sentiment", sa.String),
+    sa.Column("agent_id", sa.String),
+    sa.Column("timestamp", sa.DateTime, default=sa.func.now()),
+)
+
+leads_table = sa.Table(
+    "leads",
+    metadata,
+    sa.Column("id", sa.String, primary_key=True, default=lambda: str(uuid.uuid4())),
+    sa.Column("customer_id", sa.String, sa.ForeignKey("customers.id"), nullable=False),
+    sa.Column("source", sa.String),
+    sa.Column("status", sa.String, default="nuevo"),
+    sa.Column("pipeline_stage", sa.String, default="calificacion"),
+    sa.Column("estimated_value", sa.Float, default=0.0),
+    sa.Column("probability", sa.Float, default=0.1),
+    sa.Column("assigned_agent_id", sa.String),
     sa.Column("created_at", sa.DateTime, default=sa.func.now()),
 )
 
-line_items_table = sa.Table(
-    "line_items",
-    metadata,
-    sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
-    sa.Column("order_id", sa.String, sa.ForeignKey("orders.id"), nullable=False),
-    sa.Column("product_id", sa.String, sa.ForeignKey("products.id"), nullable=False),
-    sa.Column("quantity", sa.Integer, nullable=False),
-    sa.Column("total", sa.Float, nullable=False),
-)
-
-scheduled_posts_table = sa.Table(
-    "scheduled_posts",
+support_tickets_table = sa.Table(
+    "support_tickets",
     metadata,
     sa.Column("id", sa.String, primary_key=True, default=lambda: str(uuid.uuid4())),
-    sa.Column("date", sa.Date, nullable=False),
-    sa.Column("content_type", sa.String, nullable=False),
-    sa.Column("content_data_json", sa.String, nullable=False), # Store dict as JSON string
+    sa.Column("customer_id", sa.String, sa.ForeignKey("customers.id"), nullable=False),
+    sa.Column("status", sa.String, default="abierto"),
+    sa.Column("priority", sa.String, default="media"),
+    sa.Column("subject", sa.String),
+    sa.Column("description", sa.Text),
+    sa.Column("assigned_agent_id", sa.String),
+    sa.Column("created_at", sa.DateTime, default=sa.func.now()),
+    sa.Column("resolved_at", sa.DateTime),
 )
 
+
 def init_db():
-    """Creates all tables in the database and seeds initial data if necessary."""
+    """Creates all tables in the database."""
     metadata.create_all(engine)
 
+# --- CRUD Functions for Customers ---
+
+def add_customer(customer: Customer) -> Customer:
     with Session() as session:
-        if session.query(customers_table).count() == 0:
-            print("Seeding database with initial data...")
-            _seed_data(session)
-            session.commit()
-            print("Database seeding complete.")
+        stmt = customers_table.insert().values(
+            id=customer.id,
+            name=customer.name,
+            email=customer.email,
+            phone=customer.phone,
+            address=customer.address,
+            age=customer.age,
+            location=customer.location,
+            interests=json.dumps(customer.interests),
+            status=customer.status,
+            value_tier=customer.value_tier,
+            preferred_channel=customer.preferred_channel,
+            created_at=customer.created_at,
+            updated_at=customer.updated_at
+        )
+        session.execute(stmt)
+        session.commit()
+        return customer
 
-def _seed_data(session):
-    """Populates the database with some initial sample data."""
-    customers_data = [
-        {"id": "c1", "name": "Alice Smith", "phone": "+15551234567", "email": "alice@example.com", "status": "Contactado"},
-        {"id": "c2", "name": "Bob Johnson", "phone": "+15557654321", "email": "bob@example.com", "status": "Interesado"},
-        {"id": "c3", "name": "Charlie Brown", "phone": "+15558675309", "email": "charlie@example.com", "status": "Nuevo"},
-    ]
-    session.execute(customers_table.insert(), customers_data)
+def get_customer_by_id(customer_id: str) -> Optional[Customer]:
+    with Session() as session:
+        stmt = sa.select(customers_table).where(customers_table.c.id == customer_id)
+        result = session.execute(stmt).first()
+        if result:
+            interests = json.loads(result.interests) if result.interests else []
+            return Customer(**{**result._asdict(), "interests": interests})
+        return None
 
-    products_data = [
-        {"id": "p1", "name": "Servicio de Consultoría", "price": 150.0},
-        {"id": "p2", "name": "Soporte Técnico Mensual", "price": 75.0},
-        {"id": "p3", "name": "Desarrollo Web Básico", "price": 800.0},
-    ]
-    session.execute(products_table.insert(), products_data)
+def get_all_customers() -> List[Customer]:
+    customers = []
+    with Session() as session:
+        stmt = sa.select(customers_table)
+        for row in session.execute(stmt).fetchall():
+            interests = json.loads(row.interests) if row.interests else []
+            customers.append(Customer(**{**row._asdict(), "interests": interests}))
+    return customers
 
-    scheduled_posts_data = [
-        {
-            "id": "sp1",
-            "date": datetime.date.today() + datetime.timedelta(days=2),
-            "content_type": "text",
-            "content_data_json": json.dumps({"content": "Este es un post de texto de prueba programado."})
-        }
-    ]
-    session.execute(scheduled_posts_table.insert(), scheduled_posts_data)
 
 if __name__ == "__main__":
-    print("Initializing database...")
+    print("Initializing CRM database...")
     init_db()
     print("Database ready.")
