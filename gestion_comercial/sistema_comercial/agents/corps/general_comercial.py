@@ -14,7 +14,7 @@ class AgentState(TypedDict):
     messages: Annotated[Sequence[BaseMessage], lambda x, y: x + y]
 
 class GeneralComercial:
-    def __init__(self, page: ft.Page):
+    def __init__(self, page: ft.Page, openai_api_key: str):
         self.page = page
 
         # Instantiate captains
@@ -46,8 +46,7 @@ class GeneralComercial:
         tools = [gestionar_perfil_cliente, gestionar_pipeline_ventas]
 
         # Configure the graph
-        # NOTE: An API key needs to be configured in the environment for this to work.
-        model = ChatOpenAI(temperature=0, streaming=True, model="gpt-4o")
+        model = ChatOpenAI(temperature=0, streaming=True, model="gpt-4o", api_key=openai_api_key)
         model = model.bind_tools(tools)
 
         workflow = StateGraph(AgentState)
