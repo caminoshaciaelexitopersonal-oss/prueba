@@ -1,0 +1,7 @@
+flet
+langchain
+langgraph
+langchain-openai
+langsmith
+python-dotenv
+sqlalchemy
